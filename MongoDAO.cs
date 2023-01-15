@@ -8,41 +8,65 @@ using MongoDB.Driver;
 
 namespace MongoDBLabb
 {
-    internal class MongoDAO :IEntryDAO
+    internal class MongoDAO : IEntryDAO
     {
         MongoClient dbClient;
-        IMongoDatabase database;    
+        IMongoDatabase database;
+        IMongoCollection<Entry> entriesCollection;  //ska det vara kvar?
 
         public MongoDAO(string connectionString, string database)
         {
             dbClient = new MongoClient(connectionString);
             this.database = this.dbClient.GetDatabase(database);
+            entriesCollection = this.database.GetCollection<Entry>("Entries"); //ska det vara kvar?
 
         }
 
-        public void CreateEntry()
-        {
-            throw new NotImplementedException();
+        public async Task CreateEntryAsync(Entry entry)          //(string title, string content)
+        { 
+            
+            //var collection = database.GetCollection<BsonDocument>("Entries");
+            //var document = new BsonDocument
+            //{
+            //    {"date", DateTime.Now.ToString()},
+            //    {"title", title},
+            //    {"content",  content}
+            //};
+            //await collection.InsertOneAsync(document);
+            await entriesCollection.InsertOneAsync(entry);
         }
 
-        public void DeleteEntry()
+        public async Task <bool> DeleteEntryAsync(string date)
         {
-            throw new NotImplementedException();
+            var filter = Builders<Entry>.Filter.Eq("date", date);
+            var result = await entriesCollection.DeleteOneAsync(filter);
+            return result.DeletedCount != 0;
+
         }
 
-        public List<string> GetAllEntries()
+        //public async Task<List<Entry>> GetAllEntries()
+          public List<Entry> GetAllEntries()
         {
-            throw new NotImplementedException();
+            return entriesCollection.Find(new BsonDocument()).ToList();
+            //return await entriesCollection.Find(new BsonDocument()).ToListAsync();
         }
 
-        public List <string> GetEntriesByFilter(string key)
+        public List<Entry> GetEntriesByFilter(string fieldName, string fieldValue)
         {
-            throw new NotImplementedException();
+            var filter = Builders<Entry>.Filter.Eq(fieldName, fieldValue);
+            var result = entriesCollection.Find(filter).ToList();
+
+            return result;
         }
 
-        public void UpdateEntry()
+        public async Task <bool> UpdateEntryAsync(string date, string content)
         {
-            throw new NotImplementedException();
+            var filter = Builders<Entry>.Filter.Eq("date", date);
+            var update = Builders<Entry>.Update.Set("content", content);
+
+            var result = await entriesCollection.UpdateOneAsync(filter, update);
+
+            return result.ModifiedCount != 0;
         }
     }
 }
