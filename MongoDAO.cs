@@ -22,7 +22,7 @@ namespace MongoDBLabb
 
         }
 
-        public async Task CreateEntryAsync(Entry entry)          //(string title, string content)
+        public async Task CreateEntryAsync(Entry entry)         
         { 
             
             //var collection = database.GetCollection<BsonDocument>("Entries");
