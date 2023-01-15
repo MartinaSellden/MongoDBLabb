@@ -20,7 +20,7 @@ namespace MongoDBLabb
             this.entryDAO = entryDAO;
         }
 
-        public void Start()     // Fixa felhantering inkl. kolla all input
+        public void Start()     // Fixa felhantering inkl. kolla all input   Eventuellt kolla att bara vissa årtal, timmar etc tillåts
         {
             try
             {
@@ -36,7 +36,7 @@ namespace MongoDBLabb
 
                             break;
                         case 2:
-
+                            
                             CreateEntry();
 
                             break;
