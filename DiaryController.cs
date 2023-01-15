@@ -285,9 +285,10 @@ namespace MongoDBLabb
                 "5. Radera inlägg",
                 "6. Avsluta" };
 
-                io.PrintString("---------------------------------------------\n");
-                io.PrintString("Min Dagbok\n");
-                io.PrintString("....................");
+                io.PrintString(Art.title);
+                //io.PrintString("---------------------------------------------\n");
+                //io.PrintString("Min Dagbok\n");
+                io.PrintString("... Min Dagbok ......");
 
                 foreach (var choice in menuChoices)
                     io.PrintString($"{choice}");
