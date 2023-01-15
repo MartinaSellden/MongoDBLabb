@@ -106,6 +106,8 @@ namespace MongoDBLabb
                         entryDAO.DeleteEntryAsync(dateForEntryToDelete);
                         io.PrintString("\nInlägg raderat");
                         tryAgain = false;
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
                     }
                 }
                 else
@@ -132,8 +134,10 @@ namespace MongoDBLabb
                         var retrievedEntries = entryDAO.GetEntriesByFilter("date", dateOfEntryToUpdate);
                         if (retrievedEntries.Count ==0)
                         {
-                            io.PrintString("Det finns inget inlägg med valt datum.");
+                            io.PrintString("\nInget inlägg med valt datum kunde hittas.");
                             tryAgain= false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                         }
                         else
                         {
@@ -144,6 +148,8 @@ namespace MongoDBLabb
 
                             io.PrintString("\nInlägg redigerat.");
                             tryAgain = false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                         }
                     }
                     else
@@ -174,6 +180,10 @@ namespace MongoDBLabb
                 Entry entry = new Entry(title, content);
                 entryDAO.CreateEntryAsync(entry);
 
+                io.PrintString("\nInlägg skapat.");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
+
             }
             catch (Exception)
             {
@@ -187,11 +197,18 @@ namespace MongoDBLabb
             try
             {
                 List<Entry> allEntries = entryDAO.GetAllEntries();
+
+                io.PrintString("====================================");
+
                 allEntries.ForEach(entry => io.PrintString("Id-nummer: " +
                                                              entry.Id + "\nDatum: " +
                                                              entry.Date + "\nTitel: " +
-                                                             entry.Title + "\nInlägg: \n" +
-                                                             entry.Content + "\n............................"));
+                                                             entry.Title + "\nInlägg: " + 
+                                                             entry.Content + "\n====================================")); ;
+
+                io.PrintString(" ");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
 
             }
             catch (Exception)
@@ -220,6 +237,8 @@ namespace MongoDBLabb
                         {
                             io.PrintString("Det finns inget inlägg med valt datum.");
                             tryAgain = false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                         }
                         else
                         {
@@ -229,11 +248,16 @@ namespace MongoDBLabb
                                                                              entry.Title + "\nInlägg: \n" +
                                                                              entry.Content));
                             tryAgain = false;
+
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                         }
                     }
                     else
                     {
                         io.PrintString("\nFelaktigt format.");
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
 
                     }
                 }
@@ -256,6 +280,8 @@ namespace MongoDBLabb
                 if (entryByTitle.Count==0)
                 {
                     io.PrintString($"\nInlägg med titel {titleForEntryToRead} kunde inte hittas");
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
                 }
                 else
                 {
@@ -264,6 +290,9 @@ namespace MongoDBLabb
                                                                    entry.Date + "\nTitel: " +
                                                                    entry.Title + "\nInlägg: \n" +
                                                                    entry.Content));
+
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
                 }
             }
             catch (Exception)
@@ -286,12 +315,11 @@ namespace MongoDBLabb
                 "6. Avsluta" };
 
                 io.PrintString(Art.title);
-                //io.PrintString("---------------------------------------------\n");
-                //io.PrintString("Min Dagbok\n");
+
                 io.PrintString("... Min Dagbok ......");
 
                 foreach (var choice in menuChoices)
-                    io.PrintString($"{choice}");
+                    io.PrintString(choice);
 
                 io.PrintString("\nSkriv siffran som motsvarar ditt val.");
 
@@ -303,11 +331,15 @@ namespace MongoDBLabb
                     if (answer<1 || answer>menuChoices.Count)
                     {
                         io.PrintString("Felaktig input, vänligen välj bland tillgängliga rubriker.");
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
                         Menu();
                     }
                     return answer;
                 }
                 io.PrintString("Felaktig input, skriv endast siffror. Välj bland rubrikerna.");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
                 Menu();
                 return 0;
 
@@ -347,12 +379,16 @@ namespace MongoDBLabb
                         if (answer<1 || answer>readEntriesChoices.Count)
                         {
                             io.PrintString("Felaktig input, vänligen välj bland tillgängliga rubriker.");
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                             Menu();
                         }
 
                         return answer;
                     }
                     io.PrintString("Felaktig input, skriv endast siffror. Välj bland rubrikerna.");
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
                     Menu();
                     return 0;
 
