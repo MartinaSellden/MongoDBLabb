@@ -22,35 +22,39 @@ namespace MongoDBLabb
 
         }
 
-        public async Task CreateEntryAsync(EntryODM entry)         
-        { 
+        public async Task CreateEntryAsync(EntryODM entry)
+        {
             await entriesCollection.InsertOneAsync(entry);
         }
 
-        public async Task DeleteEntryAsync(string date)
-        {
-            var filter = Builders<EntryODM>.Filter.Eq("date", date);
-            await entriesCollection.DeleteOneAsync(filter);
-
-        }
-          public List<EntryODM> ReadAllEntries()
+        public List<EntryODM> ReadAllEntries()
         {
             return entriesCollection.Find(new BsonDocument()).ToList();
+        }
 
+        public EntryODM ReadEntryById(ObjectId id)
+        {
+            var filter = Builders<EntryODM>.Filter.Eq("_id", id);
+            return entriesCollection.Find(filter).FirstOrDefault();
         }
 
         public List<EntryODM> ReadEntriesByFilter(string fieldName, string fieldValue)
         {
-            var filter = Builders<EntryODM>.Filter.Eq(fieldName, fieldValue);           
+            var filter = Builders<EntryODM>.Filter.Eq(fieldName, fieldValue);
             return entriesCollection.Find(filter).ToList();
         }
 
-        public async Task UpdateEntryAsync(string date, string content)
+        public async Task UpdateEntryAsync(ObjectId id, string content)
         {
-            var filter = Builders<EntryODM>.Filter.Eq("date", date);
+            var filter = Builders<EntryODM>.Filter.Eq("_id", id);
             var update = Builders<EntryODM>.Update.Set("content", content);
 
             await entriesCollection.UpdateOneAsync(filter, update);
+        }
+        public async Task DeleteEntryAsync(ObjectId id)
+        {
+            var filter = Builders<EntryODM>.Filter.Eq("_id", id);
+            await entriesCollection.DeleteOneAsync(filter);
         }
     }
 }
