@@ -24,15 +24,6 @@ namespace MongoDBLabb
 
         public async Task CreateEntryAsync(Entry entry)         
         { 
-            
-            //var collection = database.GetCollection<BsonDocument>("Entries");
-            //var document = new BsonDocument
-            //{
-            //    {"date", DateTime.Now.ToString()},
-            //    {"title", title},
-            //    {"content",  content}
-            //};
-            //await collection.InsertOneAsync(document);
             await entriesCollection.InsertOneAsync(entry);
         }
 
