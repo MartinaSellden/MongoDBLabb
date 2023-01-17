@@ -9,10 +9,10 @@ namespace MongoDBLabb
 {
     internal interface IEntryDAO
     {
+        Task CreateEntryAsync(EntryODM entry);
         List<EntryODM> ReadAllEntries();
         List<EntryODM> ReadEntriesByFilter(string fieldName, string fieldValue);
         EntryODM ReadEntryById(ObjectId id);
-        Task CreateEntryAsync(EntryODM entry);
         Task UpdateEntryAsync(ObjectId id, string content);
         Task DeleteEntryAsync(ObjectId id);
     }
