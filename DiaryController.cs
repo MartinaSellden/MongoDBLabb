@@ -3,6 +3,7 @@
 using MongoDB.Bson;
 using System.Collections.Specialized;
 using System.Diagnostics.Metrics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
@@ -20,93 +21,41 @@ namespace MongoDBLabb
             this.entryDAO = entryDAO;
         }
 
-        public void Start()     // Fixa felhantering inkl. kolla all input
-
+        public async Task StartAsync()     // Fixa felhantering inkl. kolla all input   Eventuellt kolla att bara vissa årtal, timmar etc tillåts (behövs nog inte eftersom den sätter datetime.now hela tiden)
         {
             try
             {
                 do
                 {
                     int choice = Menu();
-                    Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
-                    Regex shortDate = new Regex(@"\d{4}-\d{2}-\d{2}");
+
                     switch (choice)
                     {
                         case 1:
 
-                            List<Entry> allEntries = entryDAO.GetAllEntries();
-                            allEntries.ForEach(entry => io.PrintString("Id-nummer: " +
-                                                                         entry.Id + "\nDatum: " +
-                                                                         entry.Date + "\nTitel: " +
-                                                                         entry.Title + "\nInlägg: \n" +
-                                                                         entry.Content + "\n............................"));
+                            GetAllEntries();
 
                             break;
                         case 2:
+                            
+                            await CreateEntryAsync();
 
-                            Entry entry = new Entry(GetTitleFromUser(), GetContentFromUser());
-                            entryDAO.CreateEntryAsync(entry);
                             break;
                         case 3:
 
                             int selectedNumber = ReadEntriesMenu();
                             if (selectedNumber == 1)
                             {
-                                bool askAgain = true;
-
-                                while (askAgain)
-                                {
-                                    io.PrintString("Visa alla inlägg för ett visst datum. Skriv in datum enligt format YYYY-MM-DD");
-
-                                    string date = io.GetString();
-                                    if (shortDate.IsMatch(date))
-                                    {
-                                        var entriesByDate = entryDAO.GetEntriesByFilter("shortDate", date);
-                                        if (entriesByDate.Count ==0)
-                                        {
-                                            io.PrintString("Det finns inget inlägg med valt datum.");
-                                            askAgain = false;
-                                        }
-                                        else
-                                        {
-                                            entriesByDate.ForEach(entry => io.PrintString("\n..........................\nId-nummer: " +
-                                                                                             entry.Id + "\nDatum: " +
-                                                                                             entry.Date + "\nTitel: " +
-                                                                                             entry.Title + "\nInlägg: \n" +
-                                                                                             entry.Content));
-                                            askAgain = false;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        io.PrintString("\nFelaktigt format.");
-
-                                    }
-                                }
+                                ReadByDate();
                             }
                             if (selectedNumber == 2)
                             {
+                                // gör en ReadByEntryText();
                                 //kolla om det går att söka på del av text och matcha
                             }
                             if (selectedNumber == 3)
                             {
-                                io.PrintString("Skriv in titel för inlägget du vill visa.");
-                                string titleForEntryToRead = io.GetString();
-
-                                var entryByTitle = entryDAO.GetEntriesByFilter("title", titleForEntryToRead);
-
-                                if (entryByTitle.Count==0)
-                                {
-                                    io.PrintString($"\nInlägg med titel {titleForEntryToRead} kunde inte hittas");
-                                }
-                                else
-                                {
-                                    entryByTitle.ForEach(entry => io.PrintString("\n..........................\nId-nummer: " +
-                                                                                   entry.Id + "\nDatum: " +
-                                                                                   entry.Date + "\nTitel: " +
-                                                                                   entry.Title + "\nInlägg: \n" +
-                                                                                   entry.Content));
-                                }
+                                ReadByTitle();
                             }
                             if (selectedNumber == 5)
                             {
@@ -114,84 +63,245 @@ namespace MongoDBLabb
                             }
                             break;
                         case 4:
-
-                            bool tryAgain = true;
-
-                            while (tryAgain)
-                            {
-                                io.PrintString("Skriv in datum för inlägget du vill redigera. Använd format YYYY-MM-DD hh:mm:ss.");
-
-                                string dateOfEntryToUpdate = io.GetString();
-                                if (longDate.IsMatch(dateOfEntryToUpdate))
-                                {
-                                    var retrievedEntries = entryDAO.GetEntriesByFilter("date", dateOfEntryToUpdate);
-                                    if (retrievedEntries.Count ==0)
-                                    {
-                                        io.PrintString("Det finns inget inlägg med valt datum.");
-                                        tryAgain= false;
-                                    }
-                                    else
-                                    {
-                                        io.PrintString("Skriv in ny text för inlägget.");
-                                        string newContent = io.GetString();
-
-                                        entryDAO.UpdateEntryAsync(dateOfEntryToUpdate, newContent);
-
-                                        io.PrintString("\nInlägg redigerat.");
-                                        tryAgain = false;
-                                    }
-                                }
-                                else
-                                {
-                                    io.PrintString("Felaktigt format.");
-
-                                }
-
-                            }
-
+                           
+                            await UpdateEntryAsync();
                             break;
                         case 5:
 
-                            tryAgain  = true;
-
-                            while (tryAgain)
-                            {
-                                io.PrintString("Skriv in datum enligt format YYYY-MM-DD hh:mm:ss");
-                                string dateForEntryToDelete = io.GetString();
-
-                                if (longDate.IsMatch(dateForEntryToDelete))
-                                {
-                                    var entryToDelete = entryDAO.GetEntriesByFilter("date", dateForEntryToDelete);
-                                    if (entryToDelete.Count == 0)
-                                    {
-                                        io.PrintString("\nInget inlägg med valt datum kunde hittas.");
-                                        tryAgain= false;
-                                    }
-                                    else
-                                    {
-                                        entryDAO.DeleteEntryAsync(dateForEntryToDelete);
-                                        io.PrintString("\nInlägg raderat");
-                                        tryAgain = false;
-                                    }
-                                }
-                                else
-                                {
-                                io.PrintString("Felaktigt format.");
-                                }
-                            }
+                            await DeleteEntryAsync();               
                             break;
                         case 6:
+
                             io.Exit();
                             break;
-
                     }
 
                 } while (true);
-
             }
             catch (Exception e)
             {
                 io.PrintString("Ett oväntat fel inträffade: " + e.ToString());
+            }
+        }
+
+        private async Task DeleteEntryAsync()
+        {
+            bool tryAgain  = true;
+            Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
+
+            while (tryAgain)
+            {
+                io.PrintString("Skriv in datum enligt format YYYY-MM-DD hh:mm:ss");
+                string dateForEntryToDelete = io.GetString();
+
+                if (longDate.IsMatch(dateForEntryToDelete))
+                {
+                    var entryToDelete = entryDAO.ReadEntriesByFilter("date", dateForEntryToDelete);
+                    if (entryToDelete.Count == 0)
+                    {
+                        io.PrintString("\nInget inlägg med valt datum kunde hittas.");
+                        tryAgain= false;
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
+                    }
+                    else
+                    {
+                        await entryDAO.DeleteEntryAsync(dateForEntryToDelete);
+                        io.PrintString("\nInlägg raderat");
+                        tryAgain = false;
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
+                    }
+                }
+                else
+                {
+                    io.PrintString("Felaktigt format.");
+                }
+            }
+        }
+
+        private async Task UpdateEntryAsync()
+        {
+            try
+            {
+                bool tryAgain = true;
+                Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
+
+                while (tryAgain)
+                {
+                    io.PrintString("Skriv in datum för inlägget du vill redigera. Använd format YYYY-MM-DD hh:mm:ss.");
+
+                    string dateOfEntryToUpdate = io.GetString();
+                    if (longDate.IsMatch(dateOfEntryToUpdate))
+                    {
+                        var retrievedEntries = entryDAO.ReadEntriesByFilter("date", dateOfEntryToUpdate);
+                        if (retrievedEntries.Count ==0)
+                        {
+                            io.PrintString("\nInget inlägg med valt datum kunde hittas.");
+                            tryAgain= false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                        else
+                        {
+                            io.PrintString("Skriv in ny text för inlägget.");
+                            string newContent = io.GetString();
+
+                            await entryDAO.UpdateEntryAsync(dateOfEntryToUpdate, newContent);
+
+                            io.PrintString("\nInlägg redigerat.");
+                            tryAgain = false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                    }
+                    else
+                    {
+                        io.PrintString("Felaktigt format.");
+
+                    }
+
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        private async Task CreateEntryAsync()
+        {
+            try
+            {
+                io.PrintString("Skriv titel för inlägget");
+                string title = io.GetString();
+
+                io.PrintString("Skriv ditt inlägg");
+                string content = io.GetString();
+
+                EntryODM entry = new EntryODM(title, content);
+                await entryDAO.CreateEntryAsync(entry);
+
+                io.PrintString("\nInlägg skapat.");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        private void GetAllEntries()
+        {
+            try
+            {
+                List<EntryODM> allEntries = entryDAO.ReadAllEntries();
+
+                io.PrintString("====================================");
+
+                allEntries.ForEach(entry => io.PrintString("Id-nummer: " +
+                                                             entry.Id + "\nDatum: " +
+                                                             entry.Date + "\nTitel: " +
+                                                             entry.Title + "\nInlägg: " + 
+                                                             entry.Content + "\n====================================")); ;
+
+                io.PrintString(" ");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        private void ReadByDate()
+        {
+            Regex shortDate = new Regex(@"\d{4}-\d{2}-\d{2}");
+            bool tryAgain = true;
+
+            try
+            {
+                while (tryAgain)
+                {
+                    io.PrintString("Visa alla inlägg för ett visst datum. Skriv in datum enligt format YYYY-MM-DD");
+
+                    string date = io.GetString();
+                    if (shortDate.IsMatch(date))
+                    {
+                        var entriesByDate = entryDAO.ReadEntriesByFilter("shortDate", date);
+                        if (entriesByDate.Count ==0)
+                        {
+                            io.PrintString("Det finns inget inlägg med valt datum.");
+                            tryAgain = false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                        else
+                        {
+                            entriesByDate.ForEach(entry => io.PrintString("\n..........................\nId-nummer: " +
+                                                                             entry.Id + "\nDatum: " +
+                                                                             entry.Date + "\nTitel: " +
+                                                                             entry.Title + "\nInlägg: \n" +
+                                                                             entry.Content));
+                            tryAgain = false;
+
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                    }
+                    else
+                    {
+                        io.PrintString("\nFelaktigt format.");
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+        private void ReadByTitle()
+        {
+            try
+            {
+                io.PrintString("Skriv in titel för inlägget du vill visa.");
+                string titleForEntryToRead = io.GetString();
+
+                var entryByTitle = entryDAO.ReadEntriesByFilter("title", titleForEntryToRead);
+
+                if (entryByTitle.Count==0)
+                {
+                    io.PrintString($"\nInlägg med titel {titleForEntryToRead} kunde inte hittas");
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
+                }
+                else
+                {
+                    entryByTitle.ForEach(entry => io.PrintString("\n..........................\nId-nummer: " +
+                                                                   entry.Id + "\nDatum: " +
+                                                                   entry.Date + "\nTitel: " +
+                                                                   entry.Title + "\nInlägg: \n" +
+                                                                   entry.Content));
+
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
         }
 
@@ -200,19 +310,19 @@ namespace MongoDBLabb
             try
             {
                 List<string> menuChoices = new List<string>
-            {   "\n1. Visa alla inlägg",
+               {"\n1. Visa alla inlägg",
                 "2. Skriv ett inlägg",
                 "3. Sök efter inlägg",
                 "4. Redigera inlägg",
                 "5. Radera inlägg",
                 "6. Avsluta" };
 
-                io.PrintString("---------------------------------------------\n");
-                io.PrintString("Min Dagbok\n");
-                io.PrintString("....................");
+                io.PrintString(Art.title);
+
+                io.PrintString("... Min Dagbok ......");
 
                 foreach (var choice in menuChoices)
-                    io.PrintString($"{choice}");
+                    io.PrintString(choice);
 
                 io.PrintString("\nSkriv siffran som motsvarar ditt val.");
 
@@ -224,11 +334,15 @@ namespace MongoDBLabb
                     if (answer<1 || answer>menuChoices.Count)
                     {
                         io.PrintString("Felaktig input, vänligen välj bland tillgängliga rubriker.");
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
                         Menu();
                     }
                     return answer;
                 }
                 io.PrintString("Felaktig input, skriv endast siffror. Välj bland rubrikerna.");
+                io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                Console.ReadKey();
                 Menu();
                 return 0;
 
@@ -260,7 +374,6 @@ namespace MongoDBLabb
 
                     io.PrintString("\nSkriv siffran som motsvarar ditt val.");
 
-
                     int answer;
                     bool success = int.TryParse(io.GetString(), out answer);
 
@@ -269,19 +382,21 @@ namespace MongoDBLabb
                         if (answer<1 || answer>readEntriesChoices.Count)
                         {
                             io.PrintString("Felaktig input, vänligen välj bland tillgängliga rubriker.");
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
                             Menu();
                         }
 
                         return answer;
                     }
                     io.PrintString("Felaktig input, skriv endast siffror. Välj bland rubrikerna.");
+                    io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                    Console.ReadKey();
                     Menu();
                     return 0;
 
                 }
                 while (showMenu);
-
-
             }
 
             catch (Exception)
@@ -289,35 +404,5 @@ namespace MongoDBLabb
                 throw;
             }
         }
-
-        private string GetTitleFromUser()
-        {
-            try
-            {
-                io.PrintString("Skriv titel för inlägget");
-                string title = io.GetString();
-                return title;
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-        private string GetContentFromUser()
-        {
-            try
-            {
-                io.PrintString("Skriv ditt inlägg");
-                string content = io.GetString();
-                return content;
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
     }
 }
