@@ -1,6 +1,7 @@
 ﻿
 
 using MongoDB.Bson;
+using SharpCompress.Common;
 using System.Collections.Specialized;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
@@ -37,7 +38,7 @@ namespace MongoDBLabb
 
                             break;
                         case 2:
-                            
+
                             await CreateEntryAsync();
 
                             break;
@@ -50,8 +51,7 @@ namespace MongoDBLabb
                             }
                             if (selectedNumber == 2)
                             {
-                                // gör en ReadByEntryText();
-                                //kolla om det går att söka på del av text och matcha
+                                ReadById();
                             }
                             if (selectedNumber == 3)
                             {
@@ -63,12 +63,12 @@ namespace MongoDBLabb
                             }
                             break;
                         case 4:
-                           
+
                             await UpdateEntryAsync();
                             break;
                         case 5:
 
-                            await DeleteEntryAsync();               
+                            await DeleteEntryAsync();
                             break;
                         case 6:
 
@@ -84,20 +84,70 @@ namespace MongoDBLabb
             }
         }
 
+        private void ReadById()
+        {
+            try
+            {
+                bool tryAgain = true;
+
+                while (tryAgain)
+                {
+                    io.PrintString("Skriv in id-nummer för inlägget du vill hitta.");
+
+                    ObjectId id;
+                    bool success = ObjectId.TryParse(io.GetString(), out id);
+
+                    if (success)
+                    {
+                        EntryODM retrievedEntry = entryDAO.ReadEntryById(id);
+
+                        if (retrievedEntry==null)
+                        {
+                            io.PrintString($"\nInlägg med id-nummer \"{id}\" kunde inte hittas.");
+                            tryAgain= false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                        else
+                        {
+                            io.PrintString("\nId-nummer: " + retrievedEntry.Id + 
+                                              "\nDatum: " + retrievedEntry.Date + 
+                                              "\nTitel: " + retrievedEntry.Title + 
+                                              "\nInlägg: " + retrievedEntry.Content + "\n............................................");
+
+                            tryAgain= false;
+                            io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                            Console.ReadKey();
+                        }
+                    }
+                    else
+                    {
+                        io.PrintString("\nFelaktigt format.");
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         private async Task DeleteEntryAsync()
         {
-            bool tryAgain  = true;
-            Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
+            bool tryAgain = true;
 
             while (tryAgain)
             {
-                io.PrintString("Skriv in datum enligt format YYYY-MM-DD hh:mm:ss");
-                string dateForEntryToDelete = io.GetString();
+                io.PrintString("Skriv in id-nummer för inlägget du vill radera.");
 
-                if (longDate.IsMatch(dateForEntryToDelete))
+                ObjectId id;
+                bool success = ObjectId.TryParse(io.GetString(), out id);
+
+                if (success)
                 {
-                    var entryToDelete = entryDAO.ReadEntriesByFilter("date", dateForEntryToDelete);
-                    if (entryToDelete.Count == 0)
+                    var entryToDelete = entryDAO.ReadEntryById(id);
+                    if (entryToDelete == null)
                     {
                         io.PrintString("\nInget inlägg med valt datum kunde hittas.");
                         tryAgain= false;
@@ -106,7 +156,7 @@ namespace MongoDBLabb
                     }
                     else
                     {
-                        await entryDAO.DeleteEntryAsync(dateForEntryToDelete);
+                        await entryDAO.DeleteEntryAsync(id);
                         io.PrintString("\nInlägg raderat");
                         tryAgain = false;
                         io.PrintString("\nTryck på valfri tangent för att fortsätta.");
@@ -125,19 +175,21 @@ namespace MongoDBLabb
             try
             {
                 bool tryAgain = true;
-                Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
 
                 while (tryAgain)
                 {
-                    io.PrintString("Skriv in datum för inlägget du vill redigera. Använd format YYYY-MM-DD hh:mm:ss.");
+                    io.PrintString("Skriv in id-nummer för inlägget du vill redigera.");
 
-                    string dateOfEntryToUpdate = io.GetString();
-                    if (longDate.IsMatch(dateOfEntryToUpdate))
+                    ObjectId id;
+                    bool success = ObjectId.TryParse(io.GetString(), out id);
+
+                    if (success)
                     {
-                        var retrievedEntries = entryDAO.ReadEntriesByFilter("date", dateOfEntryToUpdate);
-                        if (retrievedEntries.Count ==0)
+                        EntryODM retrievedEntry = entryDAO.ReadEntryById(id);
+
+                        if (retrievedEntry==null)
                         {
-                            io.PrintString("\nInget inlägg med valt datum kunde hittas.");
+                            io.PrintString($"\nInlägg med id-nummer \"{id}\" kunde inte hittas.");
                             tryAgain= false;
                             io.PrintString("\nTryck på valfri tangent för att fortsätta.");
                             Console.ReadKey();
@@ -147,10 +199,9 @@ namespace MongoDBLabb
                             io.PrintString("Skriv in ny text för inlägget.");
                             string newContent = io.GetString();
 
-                            await entryDAO.UpdateEntryAsync(dateOfEntryToUpdate, newContent);
-
+                            await entryDAO.UpdateEntryAsync(id, newContent);
+                            tryAgain= false;
                             io.PrintString("\nInlägg redigerat.");
-                            tryAgain = false;
                             io.PrintString("\nTryck på valfri tangent för att fortsätta.");
                             Console.ReadKey();
                         }
@@ -158,9 +209,9 @@ namespace MongoDBLabb
                     else
                     {
                         io.PrintString("Felaktigt format.");
-
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
                     }
-
                 }
             }
             catch (Exception)
@@ -201,13 +252,13 @@ namespace MongoDBLabb
             {
                 List<EntryODM> allEntries = entryDAO.ReadAllEntries();
 
-                io.PrintString("====================================");
+                io.PrintString("............................................");
 
                 allEntries.ForEach(entry => io.PrintString("Id-nummer: " +
                                                              entry.Id + "\nDatum: " +
                                                              entry.Date + "\nTitel: " +
-                                                             entry.Title + "\nInlägg: " + 
-                                                             entry.Content + "\n====================================")); ;
+                                                             entry.Title + "\nInlägg: " +
+                                                             entry.Content + "\n............................................")); ;
 
                 io.PrintString(" ");
                 io.PrintString("\nTryck på valfri tangent för att fortsätta.");
@@ -362,7 +413,7 @@ namespace MongoDBLabb
                 {
                     List<string> readEntriesChoices = new List<string>
                     {   "1. Sök på datum",
-                        "2. Sök efter text i inlägg",
+                        "2. Sök på id-nummer",
                         "3. Sök på titel",
                         "4. Tillbaka till huvudmenyn",
                         "5. Avsluta"};

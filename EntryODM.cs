@@ -17,7 +17,8 @@ namespace MongoDBLabb
         [BsonElement("content")]
         public string Content { get; set; }
         [BsonElement("date")]
-        public string Date { get; set; }
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
+        public DateTime Date { get; set; }
         [BsonElement("shortDate")]
         public string ShortDate { get; set; }
 
@@ -26,7 +27,7 @@ namespace MongoDBLabb
         {
             Title = title;
             Content = content;
-            Date = DateTime.Now.ToString();
+            Date = DateTime.Now;
             ShortDate= DateTime.Now.ToShortDateString();
         }
 
