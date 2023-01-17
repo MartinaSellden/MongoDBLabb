@@ -12,52 +12,45 @@ namespace MongoDBLabb
     {
         MongoClient dbClient;
         IMongoDatabase database;
-        IMongoCollection<Entry> entriesCollection;  //ska det vara kvar?
+        IMongoCollection<EntryODM> entriesCollection;  //ska det vara kvar?
 
         public MongoDAO(string connectionString, string database)
         {
             dbClient = new MongoClient(connectionString);
             this.database = this.dbClient.GetDatabase(database);
-            entriesCollection = this.database.GetCollection<Entry>("Entries"); //ska det vara kvar?
+            entriesCollection = this.database.GetCollection<EntryODM>("Entries");
 
         }
 
-        public async Task CreateEntryAsync(Entry entry)         
+        public async Task CreateEntryAsync(EntryODM entry)         
         { 
             await entriesCollection.InsertOneAsync(entry);
         }
 
-        public async Task <bool> DeleteEntryAsync(string date)
+        public async Task DeleteEntryAsync(string date)
         {
-            var filter = Builders<Entry>.Filter.Eq("date", date);
-            var result = await entriesCollection.DeleteOneAsync(filter);
-            return result.DeletedCount != 0;
+            var filter = Builders<EntryODM>.Filter.Eq("date", date);
+            await entriesCollection.DeleteOneAsync(filter);
 
         }
-
-        //public async Task<List<Entry>> GetAllEntries()
-          public List<Entry> GetAllEntries()
+          public List<EntryODM> ReadAllEntries()
         {
             return entriesCollection.Find(new BsonDocument()).ToList();
-            //return await entriesCollection.Find(new BsonDocument()).ToListAsync();
+
         }
 
-        public List<Entry> GetEntriesByFilter(string fieldName, string fieldValue)
+        public List<EntryODM> ReadEntriesByFilter(string fieldName, string fieldValue)
         {
-            var filter = Builders<Entry>.Filter.Eq(fieldName, fieldValue);
-            var result = entriesCollection.Find(filter).ToList();
-
-            return result;
+            var filter = Builders<EntryODM>.Filter.Eq(fieldName, fieldValue);           
+            return entriesCollection.Find(filter).ToList();
         }
 
-        public async Task <bool> UpdateEntryAsync(string date, string content)
+        public async Task UpdateEntryAsync(string date, string content)
         {
-            var filter = Builders<Entry>.Filter.Eq("date", date);
-            var update = Builders<Entry>.Update.Set("content", content);
+            var filter = Builders<EntryODM>.Filter.Eq("date", date);
+            var update = Builders<EntryODM>.Update.Set("content", content);
 
-            var result = await entriesCollection.UpdateOneAsync(filter, update);
-
-            return result.ModifiedCount != 0;
+            await entriesCollection.UpdateOneAsync(filter, update);
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MongoDBLabb
 {
-    internal class Entry
+    internal class EntryODM
     {
         [BsonId]
         public ObjectId Id { get; set; }
@@ -22,7 +22,7 @@ namespace MongoDBLabb
         public string ShortDate { get; set; }
 
 
-        public Entry(string title, string content)
+        public EntryODM(string title, string content)
         {
             Title = title;
             Content = content;

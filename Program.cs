@@ -10,4 +10,4 @@ entryDAO = new MongoDAO(ConnectionString.connectionStr, "Diary");
 
 DiaryController controller = new DiaryController(io, entryDAO);
 
-controller.Start();
+await controller.StartAsync();

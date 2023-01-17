@@ -3,6 +3,7 @@
 using MongoDB.Bson;
 using System.Collections.Specialized;
 using System.Diagnostics.Metrics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
@@ -20,7 +21,7 @@ namespace MongoDBLabb
             this.entryDAO = entryDAO;
         }
 
-        public void Start()     // Fixa felhantering inkl. kolla all input   Eventuellt kolla att bara vissa årtal, timmar etc tillåts
+        public async Task StartAsync()     // Fixa felhantering inkl. kolla all input   Eventuellt kolla att bara vissa årtal, timmar etc tillåts (behövs nog inte eftersom den sätter datetime.now hela tiden)
         {
             try
             {
@@ -32,12 +33,12 @@ namespace MongoDBLabb
                     {
                         case 1:
 
-                            ReadAllEntries();
+                            GetAllEntries();
 
                             break;
                         case 2:
                             
-                            CreateEntry();
+                            await CreateEntryAsync();
 
                             break;
                         case 3:
@@ -63,11 +64,11 @@ namespace MongoDBLabb
                             break;
                         case 4:
                            
-                            UpdateEntry();
+                            await UpdateEntryAsync();
                             break;
                         case 5:
 
-                            DeleteEntry();               
+                            await DeleteEntryAsync();               
                             break;
                         case 6:
 
@@ -83,7 +84,7 @@ namespace MongoDBLabb
             }
         }
 
-        private void DeleteEntry()
+        private async Task DeleteEntryAsync()
         {
             bool tryAgain  = true;
             Regex longDate = new Regex(@"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}");
@@ -95,15 +96,17 @@ namespace MongoDBLabb
 
                 if (longDate.IsMatch(dateForEntryToDelete))
                 {
-                    var entryToDelete = entryDAO.GetEntriesByFilter("date", dateForEntryToDelete);
+                    var entryToDelete = entryDAO.ReadEntriesByFilter("date", dateForEntryToDelete);
                     if (entryToDelete.Count == 0)
                     {
                         io.PrintString("\nInget inlägg med valt datum kunde hittas.");
                         tryAgain= false;
+                        io.PrintString("\nTryck på valfri tangent för att fortsätta.");
+                        Console.ReadKey();
                     }
                     else
                     {
-                        entryDAO.DeleteEntryAsync(dateForEntryToDelete);
+                        await entryDAO.DeleteEntryAsync(dateForEntryToDelete);
                         io.PrintString("\nInlägg raderat");
                         tryAgain = false;
                         io.PrintString("\nTryck på valfri tangent för att fortsätta.");
@@ -117,7 +120,7 @@ namespace MongoDBLabb
             }
         }
 
-        private void UpdateEntry()
+        private async Task UpdateEntryAsync()
         {
             try
             {
@@ -131,7 +134,7 @@ namespace MongoDBLabb
                     string dateOfEntryToUpdate = io.GetString();
                     if (longDate.IsMatch(dateOfEntryToUpdate))
                     {
-                        var retrievedEntries = entryDAO.GetEntriesByFilter("date", dateOfEntryToUpdate);
+                        var retrievedEntries = entryDAO.ReadEntriesByFilter("date", dateOfEntryToUpdate);
                         if (retrievedEntries.Count ==0)
                         {
                             io.PrintString("\nInget inlägg med valt datum kunde hittas.");
@@ -144,7 +147,7 @@ namespace MongoDBLabb
                             io.PrintString("Skriv in ny text för inlägget.");
                             string newContent = io.GetString();
 
-                            entryDAO.UpdateEntryAsync(dateOfEntryToUpdate, newContent);
+                            await entryDAO.UpdateEntryAsync(dateOfEntryToUpdate, newContent);
 
                             io.PrintString("\nInlägg redigerat.");
                             tryAgain = false;
@@ -167,7 +170,7 @@ namespace MongoDBLabb
             }
         }
 
-        private void CreateEntry()
+        private async Task CreateEntryAsync()
         {
             try
             {
@@ -177,8 +180,8 @@ namespace MongoDBLabb
                 io.PrintString("Skriv ditt inlägg");
                 string content = io.GetString();
 
-                Entry entry = new Entry(title, content);
-                entryDAO.CreateEntryAsync(entry);
+                EntryODM entry = new EntryODM(title, content);
+                await entryDAO.CreateEntryAsync(entry);
 
                 io.PrintString("\nInlägg skapat.");
                 io.PrintString("\nTryck på valfri tangent för att fortsätta.");
@@ -192,11 +195,11 @@ namespace MongoDBLabb
             }
         }
 
-        private void ReadAllEntries()
+        private void GetAllEntries()
         {
             try
             {
-                List<Entry> allEntries = entryDAO.GetAllEntries();
+                List<EntryODM> allEntries = entryDAO.ReadAllEntries();
 
                 io.PrintString("====================================");
 
@@ -232,7 +235,7 @@ namespace MongoDBLabb
                     string date = io.GetString();
                     if (shortDate.IsMatch(date))
                     {
-                        var entriesByDate = entryDAO.GetEntriesByFilter("shortDate", date);
+                        var entriesByDate = entryDAO.ReadEntriesByFilter("shortDate", date);
                         if (entriesByDate.Count ==0)
                         {
                             io.PrintString("Det finns inget inlägg med valt datum.");
@@ -275,7 +278,7 @@ namespace MongoDBLabb
                 io.PrintString("Skriv in titel för inlägget du vill visa.");
                 string titleForEntryToRead = io.GetString();
 
-                var entryByTitle = entryDAO.GetEntriesByFilter("title", titleForEntryToRead);
+                var entryByTitle = entryDAO.ReadEntriesByFilter("title", titleForEntryToRead);
 
                 if (entryByTitle.Count==0)
                 {
