@@ -22,7 +22,7 @@ namespace MongoDBLabb
             this.entryDAO = entryDAO;
         }
 
-        public async Task StartAsync()     // Fixa felhantering inkl. kolla all input   Eventuellt kolla att bara vissa årtal, timmar etc tillåts (behövs nog inte eftersom den sätter datetime.now hela tiden)
+        public async Task StartAsync()  
         {
             try
             {
@@ -123,7 +123,6 @@ namespace MongoDBLabb
                     else
                     {
                         io.PrintString("\nFelaktigt format.");
-
                     }
                 }
             }
