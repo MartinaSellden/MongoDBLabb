@@ -84,6 +84,12 @@ namespace MongoDBLabb
             }
         }
 
+        private void ReadByText()
+        {
+            io.PrintString("Skriv in ordet/texten du vill söka på");
+
+        }
+
         private void ReadById()
         {
             try
@@ -420,7 +426,7 @@ namespace MongoDBLabb
                     io.PrintString("Sök efter inlägg");
 
                     foreach (var choice in readEntriesChoices)
-                        io.PrintString($"{choice}");
+                        io.PrintString(choice);
 
                     io.PrintString("\nSkriv siffran som motsvarar ditt val.");
 

@@ -43,7 +43,6 @@ namespace MongoDBLabb
             var filter = Builders<EntryODM>.Filter.Eq(fieldName, fieldValue);
             return entriesCollection.Find(filter).ToList();
         }
-
         public async Task UpdateEntryAsync(ObjectId id, string content)
         {
             var filter = Builders<EntryODM>.Filter.Eq("_id", id);
