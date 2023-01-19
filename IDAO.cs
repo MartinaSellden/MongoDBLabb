@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MongoDBLabb
 {
-    internal interface IEntryDAO
+    internal interface IDAO
     {
         Task CreateEntryAsync(EntryODM entry);
         List<EntryODM> ReadAllEntries();

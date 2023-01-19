@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MongoDBLabb
 {
-    internal class TextIO : IStringIO
+    internal class TextIO : IUI
     {
         public void Clear()
         {

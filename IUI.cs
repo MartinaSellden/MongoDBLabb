@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MongoDBLabb
 {
-    internal interface IStringIO
+    internal interface IUI
     {
         public string GetString();
         public void PrintString(string output);

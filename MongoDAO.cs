@@ -8,18 +8,17 @@ using MongoDB.Driver;
 
 namespace MongoDBLabb
 {
-    internal class MongoDAO : IEntryDAO
+    internal class MongoDAO : IDAO
     {
         MongoClient dbClient;
         IMongoDatabase database;
-        IMongoCollection<EntryODM> entriesCollection;  //ska det vara kvar?
+        IMongoCollection<EntryODM> entriesCollection;  
 
         public MongoDAO(string connectionString, string database)
         {
             dbClient = new MongoClient(connectionString);
             this.database = this.dbClient.GetDatabase(database);
             entriesCollection = this.database.GetCollection<EntryODM>("Entries");
-
         }
 
         public async Task CreateEntryAsync(EntryODM entry)
@@ -43,6 +42,7 @@ namespace MongoDBLabb
             var filter = Builders<EntryODM>.Filter.Eq(fieldName, fieldValue);
             return entriesCollection.Find(filter).ToList();
         }
+
         public async Task UpdateEntryAsync(ObjectId id, string content)
         {
             var filter = Builders<EntryODM>.Filter.Eq("_id", id);
@@ -50,6 +50,7 @@ namespace MongoDBLabb
 
             await entriesCollection.UpdateOneAsync(filter, update);
         }
+
         public async Task DeleteEntryAsync(ObjectId id)
         {
             var filter = Builders<EntryODM>.Filter.Eq("_id", id);

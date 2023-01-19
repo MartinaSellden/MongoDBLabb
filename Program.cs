@@ -2,8 +2,8 @@
 using MongoDBLabb;
 
 
-IStringIO io;
-IEntryDAO entryDAO;
+IUI io;
+IDAO entryDAO;
 
 io = new TextIO();
 entryDAO = new MongoDAO(ConnectionString.connectionStr, "Diary");

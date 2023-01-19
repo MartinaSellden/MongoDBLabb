@@ -13,15 +13,14 @@ namespace MongoDBLabb
 {
     internal class DiaryController
     {
-        IStringIO io;
-        IEntryDAO entryDAO;
+        IUI io;
+        IDAO entryDAO;
 
-        public DiaryController(IStringIO io, IEntryDAO entryDAO)
+        public DiaryController(IUI io, IDAO entryDAO)
         {
             this.io = io;
             this.entryDAO = entryDAO;
         }
-
         public async Task StartAsync()  
         {
             try
